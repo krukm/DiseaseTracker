@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DiseaseTracker</string>
+    <string name="immunizable">immunizable</string>
+    <string name="add">Report</string>
+
+    <array name="schools">
+        <item>Abbot</item>
+        <item>Angell</item>
+        <item>Ann Arbor Open At Mack</item>
+        <item>Ann Arbor Technological High</item>
+        <item>Bach Elementary</item>
+        <item>Burns Park Elementary</item>
+        <item>Carpenter</item>
+        <item>Clague Middle</item>
+        <item>Clifford E. Bryant Comm.</item>
+        <item>Community High</item>
+        <item>Dicken Elementary</item>
+        <item>Eberwhite</item>
+        <item>Forsythe Middle</item>
+        <item>Haisley Elementary</item>
+        <item>Huron High</item>
+        <item>John Allen</item>
+        <item>Lakewood Elementary</item>
+        <item>Logan Elementary</item>
+        <item>Martin Luther King Elem.</item>
+        <item>Mary D. Mitchell</item>
+        <item>Northside Elementary</item>
+        <item>Pattengill</item>
+        <item>Pioneer High</item>
+        <item>Pittsfield</item>
+        <item>Roberto Clemente Center</item>
+        <item>Scarlett Middle</item>
+        <item>Skyline High</item>
+        <item>Slauson Middle</item>
+        <item>Tappan Middle</item>
+        <item>Thurston Elementary</item>
+        <item>Uriah H. Lawton</item>
+        <item>Wines Elementary</item>
+    </array>
+
+</resources>
