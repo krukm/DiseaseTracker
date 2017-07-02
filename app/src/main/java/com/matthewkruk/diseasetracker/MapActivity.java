@@ -4,16 +4,14 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.parse.FindCallback;
@@ -28,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MapActivity extends ActionBarActivity implements OnMapReadyCallback, AddDialogFragment.Listener {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, AddDialogFragment.Listener {
 
     private static final String TAG = MapActivity.class.getName();
     private static final String KEY_SCHOOL_NAME = "schoolName";
@@ -71,21 +69,21 @@ public class MapActivity extends ActionBarActivity implements OnMapReadyCallback
         SCHOOL_COORDS.put("Wines Elementary", new LatLng(42.298311, -83.769476));
     }
 
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private GoogleMap mMap;
     private Dialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-        setUpMapIfNeeded();
+        mapInit();
         startUpdate();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
+        mapInit();
     }
 
     @Override
@@ -109,40 +107,29 @@ public class MapActivity extends ActionBarActivity implements OnMapReadyCallback
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
-     * <p/>
-     * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
-     * <p/>
-     * A user can return to this FragmentActivity after following the prompt and correctly
-     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
-     * have been completely destroyed during this process (it is likely that it would only be
-     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
-     * method in {@link #onResume()} to guarantee that it will be called.
-     */
-    private void setUpMapIfNeeded() {
+    private void mapInit() {
+        FragmentManager fm = getSupportFragmentManager();
+        // Try to obtain the map from the SupportMapFragment.
+        SupportMapFragment fragment = ((SupportMapFragment) fm.findFragmentById(R.id.map));
         // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
+        if (fragment == null) {
+            fragment = SupportMapFragment.newInstance();
+        }
+        fragment.getMapAsync(this);
+        // Check if we were successful in obtaining the map.
             if (mMap != null) {
                 setUpMap();
             }
-        }
     }
 
     private void setUpMap() {
+        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+        mMap = googleMap;
+        setUpMap();
     }
 
     @Override
@@ -150,8 +137,8 @@ public class MapActivity extends ActionBarActivity implements OnMapReadyCallback
         showProgressDialog();
 
         ParseObject entry = new ParseObject("Entry");
-        entry.put("schoolName", schoolName);
-        entry.put("immunizable", immunizable);
+        entry.put(KEY_SCHOOL_NAME, schoolName);
+        entry.put(KEY_IMMUNIZABLE, immunizable);
         entry.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -215,7 +202,7 @@ public class MapActivity extends ActionBarActivity implements OnMapReadyCallback
 
     private void showProgressDialog() {
         if (progressDialog == null || !progressDialog.isShowing()) {
-            progressDialog = ProgressDialog.show(this, "Loading", null);
+            progressDialog = ProgressDialog.show(this, "Loading", "Downloading...");
         }
     }
 }

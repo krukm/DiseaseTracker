@@ -15,7 +15,7 @@ public class AddDialogFragment extends DialogFragment {
     public static final String TAG = AddDialogFragment.class.getName();
 
     public interface Listener {
-        public void onAdd(String schoolName, boolean immunizable);
+        void onAdd(String schoolName, boolean immunizable);
     }
 
     private Listener mListener;
