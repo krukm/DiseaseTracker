@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "836665849082",
+    "firebase_url": "https://authentic-root-92816.firebaseio.com",
+    "project_id": "authentic-root-92816",
+    "storage_bucket": "authentic-root-92816.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:836665849082:android:4858c4558a674af0",
+        "android_client_info": {
+          "package_name": "com.matthewkruk.diseasetracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "836665849082-csmqmphn97q71nuumk2l0iorvr0otoda.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.matthewkruk.diseasetracker",
+            "certificate_hash": "9575890d9a4b6e4d3429819f07a63717953ff164"
+          }
+        },
+        {
+          "client_id": "836665849082-ofcmmludfc0savpitogr7adsg7joabm8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQomSKXxWZOpCvp8W6nTa4xftOZIZiqMU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "836665849082-ofcmmludfc0savpitogr7adsg7joabm8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

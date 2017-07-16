@@ -6,34 +6,43 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.parse.FindCallback;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.SaveCallback;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import rx.Observable;
+
+
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, AddDialogFragment.Listener {
 
     private static final String TAG = MapActivity.class.getName();
-    private static final String KEY_SCHOOL_NAME = "schoolName";
-    private static final String KEY_IMMUNIZABLE = "immunizable";
+
+    private DatabaseReference mRootReference = FirebaseDatabase.getInstance().getReference();
+    private DatabaseReference mSchoolReference = mRootReference.child("schools");
 
     private static final Map<String, LatLng> SCHOOL_COORDS = new HashMap<>();
-
     {
         SCHOOL_COORDS.put("Abbot", new LatLng(42.294235, -83.785226));
         SCHOOL_COORDS.put("Angell", new LatLng(42.274521, -83.728093));
@@ -71,13 +80,39 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private Dialog progressDialog;
+    private List<School> updatedList = new ArrayList<School>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String[] areaSchoolNames = getResources().getStringArray(R.array.schools);
+        final List<String> schoolNames = Arrays.asList(areaSchoolNames);
+
+            for(String s : schoolNames){
+                School school = new School();
+                school.setSchoolName(s);
+                school.setEvent(0);
+                updatedList.add(school);
+            }
+
+        //populate database if empty
+        mSchoolReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.hasChildren()){
+
+                        mSchoolReference.child("school").setValue(updatedList);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "Something went wrong!");
+            }
+        });
         setContentView(R.layout.activity_map);
         mapInit();
-        startUpdate();
     }
 
     @Override
@@ -133,34 +168,33 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onAdd(String schoolName, boolean immunizable) {
+    public void onAdd(final String schoolName) {
         showProgressDialog();
 
-        ParseObject entry = new ParseObject("Entry");
-        entry.put(KEY_SCHOOL_NAME, schoolName);
-        entry.put(KEY_IMMUNIZABLE, immunizable);
-        entry.saveInBackground(new SaveCallback() {
+        final Query schoolQuery = mSchoolReference.orderByChild("school").equalTo(schoolName);
+        schoolQuery.addValueEventListener(new ValueEventListener() {
             @Override
-            public void done(ParseException e) {
-                startUpdate();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    for(DataSnapshot dSnapshot : dataSnapshot.getChildren()){
+                        long oldEvent = (long) dSnapshot.child("schools").child("school").child("event").getValue();
+                        mSchoolReference.child("schools").child("school").child("event").setValue(oldEvent + 1);
+                }
+
+
+                updatedList = schoolList;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                    Log.w(TAG, "Couldn't find match in db", databaseError.toException());
             }
         });
-    }
-
-    private void startUpdate() {
-        showProgressDialog();
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Entry");
-        query.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> parseObjects, ParseException e) {
                 progressDialog.dismiss();
-                updateMap(parseObjects);
-            }
-        });
+                updateMap(updatedList);
     }
 
-    private void updateMap(List<ParseObject> entries) {
+    private void updateMap(List<School> entries) {
         final Map<String, Integer> schoolEvents = getSchoolEvents(entries);
         for(Map.Entry<String, Integer> entry : schoolEvents.entrySet()) {
             final CircleOptions options = new CircleOptions()
@@ -172,23 +206,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private Map<String, Integer> getSchoolEvents(List<ParseObject> entries) {
+    private Map<String, Integer> getSchoolEvents(List<School> entries) {
         final Map<String, Integer> events = new HashMap<>();
 
-        Collections.sort(entries, new Comparator<ParseObject>() {
+        Collections.sort(entries, new Comparator<School>() {
             @Override
-            public int compare(ParseObject lhs, ParseObject rhs) {
-                return lhs.getString(KEY_SCHOOL_NAME).compareTo(rhs.getString(KEY_SCHOOL_NAME));
+            public int compare(School lhs, School rhs) {
+                return lhs.schoolName.compareTo(rhs.schoolName);
             }
         });
 
         int currentSchoolStart = 0;
-        String currentSchoolName = entries.get(0).getString(KEY_SCHOOL_NAME);
+        String currentSchoolName = entries.get(0).schoolName;
 
         final int size = entries.size();
         for (int i = 0; i < size; i++) {
-            final ParseObject entry = entries.get(i);
-            final String schoolName = entry.getString(KEY_SCHOOL_NAME);
+            final School entry = entries.get(i);
+            final String schoolName = entry.schoolName;
             boolean newSchool = !schoolName.equals(currentSchoolName);
             if (newSchool || (i == size - 1)) {
                 events.put(currentSchoolName, i - currentSchoolStart);
@@ -204,5 +238,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (progressDialog == null || !progressDialog.isShowing()) {
             progressDialog = ProgressDialog.show(this, "Loading", "Downloading...");
         }
+    }
+
+    private Observable<List<School>> loadSchools(){
+        Firebase firebase = new Firebase("https://authentic-root-92816.firebaseio.com/");
+        final GenericTypeIndicator<List<School>> typeIndicator = new GenericTypeIndicator<List<School>>();
+            return RxFirebase
+                    .observe(firebase.orderByKey())
+                    .map(snapshot -> snapshot.getValue(typeIndicator));
     }
 }

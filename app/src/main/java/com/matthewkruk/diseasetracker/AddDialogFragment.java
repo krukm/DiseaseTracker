@@ -8,14 +8,13 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Spinner;
 
 public class AddDialogFragment extends DialogFragment {
     public static final String TAG = AddDialogFragment.class.getName();
 
     public interface Listener {
-        void onAdd(String schoolName, boolean immunizable);
+        void onAdd(String schoolName);
     }
 
     private Listener mListener;
@@ -30,8 +29,7 @@ public class AddDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final Context context = getActivity();
         final View view = LayoutInflater.from(context).inflate(R.layout.dialog_add, null, false);
-        final Spinner schoolSpinner = (Spinner) view.findViewById(R.id.schools_spinner);
-        final CheckBox immunizableCheckbox = (CheckBox) view.findViewById(R.id.immunizable_checkbox);
+        final Spinner schoolSpinner = view.findViewById(R.id.schools_spinner);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view);
@@ -42,8 +40,7 @@ public class AddDialogFragment extends DialogFragment {
             public void onClick(DialogInterface dialog, int which) {
                 if (mListener != null) {
                     mListener.onAdd(
-                            schoolSpinner.getSelectedItem().toString(),
-                            immunizableCheckbox.isChecked());
+                            schoolSpinner.getSelectedItem().toString());
                 }
             }
         });
